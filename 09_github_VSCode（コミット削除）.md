@@ -169,4 +169,65 @@ on:
 
 ブランチを切り替えても、「Settings > Environments」内の履歴は残ることがあります。完全に消したい場合は、GitHub APIや Environments の削除が必要です。
 
+* * *
+
+## ✅ 方法1：GitHubリポジトリ設定から**ログとアーティファクトを一括削除**
+
+これは「履歴の中身（ログ）」だけを消します。
+
+### 🔧 手順：
+
+1. GitHubの該当リポジトリへ
+2. 上部の「Settings」へ
+3. 左側メニューから「Actions」 > 「General」へ
+4. 下のほうにある
+   　→ `Artifacts and logs`
+   　→ `Delete all logs and artifacts for this repository` をクリック
+
+🧹 これで **すべてのworkflow実行ログや成果物（artifact）が削除**されます。
+ただし、**実行履歴自体はActionsタブに残ります**（空の履歴として表示）。
+
+## ✅ 方法2：workflow実行履歴自体を**GitHub API**で削除（1件ずつ）
+
+GitHubは公式に「workflow runsの削除」を**API経由でサポート**しています。
+
+### 🔨 手順（GitHub CLIまたはcurl）
+
+#### 1. すべてのworkflow run IDを取得
+
+```bash
+curl -H "Authorization: token YOUR_GITHUB_TOKEN" \
+     https://api.github.com/repos/USERNAME/REPO/actions/runs
+```
+
+#### 2. 1つずつ削除
+
+```bash
+curl -X DELETE -H "Authorization: token YOUR_GITHUB_TOKEN" \
+     https://api.github.com/repos/USERNAME/REPO/actions/runs/RUN_ID
+```
+
+> ⚠️ `YOUR_GITHUB_TOKEN` は、**repoスコープ付きのPersonal Access Token** が必要です。
+
+## ✅ 方法3：リポジトリの「Actions設定を一時無効化」して履歴リセット
+
+### 手順：
+
+1. Settings → Actions → General
+2. 「Disable Actions for this repository」にチェック
+3. 少し時間を置いて再度有効にすると、履歴がリセットされたように見えることがあります（非推奨なテクニック）
+
+## ❌ 不可能なこと
+
+| やりたいこと              | できるか？ | 方法                               |
+| ------------------- | ----- | -------------------------------- |
+| 実行ログの一括削除           | ✅     | Settings → Actions → Delete logs |
+| 実行履歴自体の一括削除         | ❌     | APIで1件ずつ削除が必要                    |
+| Actionsタブからすべて履歴を消す | ❌     | リポジトリを削除・再作成しないと不完全              |
+
+### ✳️ 補足：完全に履歴を消すなら
+
+* **リポジトリを削除して作り直す**
+* または、`git clone` → `git remote set-url` → `git push --mirror` で新しい空リポジトリを作成
+
 
